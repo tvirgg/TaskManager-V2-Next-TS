@@ -1,3 +1,5 @@
+// components/Calendar.tsx
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -7,6 +9,7 @@ import CommonTasks from './CommonTasks';
 import { useTasks } from '../contexts/TaskContext';
 import { getMonthlyHolidays } from '../api/isDayOff';
 import { useUser } from '../contexts/UserContext';
+import { EyeIcon } from '@heroicons/react/24/outline';
 
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -26,6 +29,7 @@ const Calendar: React.FC<CalendarProps> = ({ username }) => {
   const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
   const { currentUser } = useUser();
+  const [showTasks, setShowTasks] = useState<boolean>(true); // Новое состояние для отображения задач
 
   useEffect(() => {
     fetchHolidays();
@@ -77,39 +81,50 @@ const Calendar: React.FC<CalendarProps> = ({ username }) => {
 
   const userTasks = tasks[username] || {};
 
+  const toggleShowTasks = () => {
+    setShowTasks((prev) => !prev);
+  };
+
   return (
     <div className="flex flex-col h-screen">
       {/* Top navigation */}
       <div className="flex items-center justify-between p-4 bg-gray-800">
         {/* Company name */}
-        <h1 className="text-xl font-bold">Gerus/targets/</h1>
+        <h1 className="text-xl font-bold text-white">Gerus/targets/</h1>
         {/* Navigation controls */}
         <div className="flex items-center space-x-4">
           <button
             onClick={handlePrevMonth}
-            className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
+            className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
           >
             Prev
           </button>
-          <span className="font-semibold">
+          <span className="font-semibold text-white">
             {monthNames[currentMonth - 1]} {currentYear}
           </span>
           <button
             onClick={handleNextMonth}
-            className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600"
+            className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-white"
           >
             Next
           </button>
         </div>
-        {/* Profile and logout */}
+        {/* Profile, Logout и Иконка Глаза */}
         <div className="flex items-center space-x-4">
-          <span>{currentUser}</span>
+          <button
+            onClick={toggleShowTasks}
+            className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label={showTasks ? 'Hide Tasks' : 'Show Tasks'}
+          >
+            <EyeIcon className="h-6 w-6 text-white" />
+          </button>
+          <span className="text-white">{currentUser}</span>
           <button
             onClick={() => {
               localStorage.removeItem('currentUser');
               window.location.href = '/';
             }}
-            className="px-2 py-1 bg-red-600 rounded hover:bg-red-500"
+            className="px-2 py-1 bg-red-600 rounded hover:bg-red-500 text-white"
           >
             Logout
           </button>
@@ -122,19 +137,24 @@ const Calendar: React.FC<CalendarProps> = ({ username }) => {
         <div className="w-64 bg-gray-850 p-4 overflow-y-auto">
           {/* List of months */}
           <div className="mb-6">
-            <h2 className="text-lg font-bold mb-2">Months</h2>
+            <h2 className="text-lg font-bold mb-2 text-white">Months</h2>
             <ul>
-              {monthNames.map((month, index) => (
-                <li
-                  key={index}
-                  className={`cursor-pointer mb-1 ${
-                    index + 1 === currentMonth ? 'text-blue-400' : ''
-                  }`}
-                  onClick={() => setCurrentMonth(index + 1)}
-                >
-                  {month}
-                </li>
-              ))}
+              {monthNames.map((month, index) => {
+                const isActive = index + 1 === currentMonth;
+                return (
+                  <li
+                    key={index}
+                    className={`cursor-pointer mb-2 p-2 rounded transition-colors duration-200 ${
+                      isActive
+                        ? 'bg-gray-700 text-white'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`}
+                    onClick={() => setCurrentMonth(index + 1)}
+                  >
+                    {month}
+                  </li>
+                );
+              })}
             </ul>
           </div>
           {/* Common Tasks */}
@@ -146,7 +166,7 @@ const Calendar: React.FC<CalendarProps> = ({ username }) => {
           {/* Days of week */}
           <div className="grid grid-cols-7 gap-2 mb-4">
             {daysOfWeek.map((day, index) => (
-              <div key={index} className="text-center font-semibold">
+              <div key={index} className="text-center font-semibold text-gray-700">
                 {day}
               </div>
             ))}
@@ -177,9 +197,10 @@ const Calendar: React.FC<CalendarProps> = ({ username }) => {
                   key={day}
                   day={day}
                   isHoliday={holidays.includes(day) || isWeekend}
-                  hasTasks={hasTasks}
+                  hasTasks={hasTasks ? dayTasks : null} // Передаём объект задач или null
                   isCurrentDay={isCurrentDay}
                   onClick={() => handleDayClick(day)}
+                  showTasks={showTasks} // Передаём новое свойство
                 />
               );
             })}

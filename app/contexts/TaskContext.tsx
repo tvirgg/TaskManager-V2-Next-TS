@@ -53,12 +53,14 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setTasks((prevTasks) => {
       const userTasks = prevTasks[username] || {};
       const dateTasks = userTasks[date] || { todo: [], done: [] };
-      dateTasks.todo.push(task);
       return {
         ...prevTasks,
         [username]: {
           ...userTasks,
-          [date]: dateTasks,
+          [date]: {
+            ...dateTasks,
+            todo: [...dateTasks.todo, task],
+          },
         },
       };
     });
@@ -72,18 +74,28 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!dateTasks) return prevTasks;
 
       if (isDone) {
-        dateTasks.done.splice(index, 1);
+        return {
+          ...prevTasks,
+          [username]: {
+            ...userTasks,
+            [date]: {
+              ...dateTasks,
+              done: dateTasks.done.filter((_, i) => i !== index),
+            },
+          },
+        };
       } else {
-        dateTasks.todo.splice(index, 1);
+        return {
+          ...prevTasks,
+          [username]: {
+            ...userTasks,
+            [date]: {
+              ...dateTasks,
+              todo: dateTasks.todo.filter((_, i) => i !== index),
+            },
+          },
+        };
       }
-
-      return {
-        ...prevTasks,
-        [username]: {
-          ...userTasks,
-          [date]: dateTasks,
-        },
-      };
     });
   };
 
@@ -95,18 +107,28 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!dateTasks) return prevTasks;
 
       if (isDone) {
-        dateTasks.done[index] = newTask;
+        return {
+          ...prevTasks,
+          [username]: {
+            ...userTasks,
+            [date]: {
+              ...dateTasks,
+              done: dateTasks.done.map((task, i) => (i === index ? newTask : task)),
+            },
+          },
+        };
       } else {
-        dateTasks.todo[index] = newTask;
+        return {
+          ...prevTasks,
+          [username]: {
+            ...userTasks,
+            [date]: {
+              ...dateTasks,
+              todo: dateTasks.todo.map((task, i) => (i === index ? newTask : task)),
+            },
+          },
+        };
       }
-
-      return {
-        ...prevTasks,
-        [username]: {
-          ...userTasks,
-          [date]: dateTasks,
-        },
-      };
     });
   };
 
@@ -118,14 +140,17 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!dateTasks) return prevTasks;
 
       const task = dateTasks.todo[index];
-      dateTasks.todo.splice(index, 1);
-      dateTasks.done.push(task);
+      if (!task) return prevTasks;
 
       return {
         ...prevTasks,
         [username]: {
           ...userTasks,
-          [date]: dateTasks,
+          [date]: {
+            ...dateTasks,
+            todo: dateTasks.todo.filter((_, i) => i !== index),
+            done: [...dateTasks.done, task],
+          },
         },
       };
     });
@@ -139,7 +164,7 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!dateTasks) return prevTasks;
 
       const task = dateTasks.todo[index];
-      dateTasks.todo.splice(index, 1);
+      if (!task) return prevTasks;
 
       const currentDate = new Date(date);
       const nextDate = new Date(currentDate);
@@ -147,14 +172,19 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const nextDateKey = nextDate.toISOString().split('T')[0];
 
       const nextDateTasks = userTasks[nextDateKey] || { todo: [], done: [] };
-      nextDateTasks.todo.push(task);
 
       return {
         ...prevTasks,
         [username]: {
           ...userTasks,
-          [date]: dateTasks,
-          [nextDateKey]: nextDateTasks,
+          [date]: {
+            ...dateTasks,
+            todo: dateTasks.todo.filter((_, i) => i !== index),
+          },
+          [nextDateKey]: {
+            ...nextDateTasks,
+            todo: [...nextDateTasks.todo, task],
+          },
         },
       };
     });
@@ -163,10 +193,9 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const addCommonTask = (username: string, task: string) => {
     setCommonTasks((prevCommonTasks) => {
       const userCommonTasks = prevCommonTasks[username] || [];
-      userCommonTasks.push(task);
       return {
         ...prevCommonTasks,
-        [username]: userCommonTasks,
+        [username]: [...userCommonTasks, task],
       };
     });
   };
@@ -175,24 +204,16 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCommonTasks((prevCommonTasks) => {
       const userCommonTasks = prevCommonTasks[username];
       if (!userCommonTasks) return prevCommonTasks;
-      userCommonTasks.splice(index, 1);
       return {
         ...prevCommonTasks,
-        [username]: userCommonTasks,
+        [username]: userCommonTasks.filter((_, i) => i !== index),
       };
     });
   };
 
   const assignCommonTaskToDate = (username: string, date: string, task: string) => {
     addTask(username, date, task);
-    setCommonTasks((prevCommonTasks) => {
-      const userCommonTasks = prevCommonTasks[username];
-      if (!userCommonTasks) return prevCommonTasks;
-      return {
-        ...prevCommonTasks,
-        [username]: userCommonTasks.filter((t) => t !== task),
-      };
-    });
+    // Не удаляем задачу из common tasks, чтобы её можно было использовать снова
   };
 
   return (

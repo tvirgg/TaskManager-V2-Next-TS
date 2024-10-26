@@ -342,7 +342,7 @@ Contributions are welcome! Follow the steps below to contribute to the project.
 
 8. **Create a Pull Request**
 
-   Go to the original repository and click "Compare & pull request". Provide a clear description of your changes and submit the pull request.
+   Go to the original repository and click "Compare & pull request" Provide a clear description of your changes and submit the pull request.
 
 *This project was developed with ❤️ by [Gerus](https://github.com/tvirgg).*
 

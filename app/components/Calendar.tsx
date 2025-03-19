@@ -9,7 +9,8 @@ import CommonTasks from './CommonTasks';
 import { useTasks } from '../contexts/TaskContext';
 import { getMonthlyHolidays } from '../api/isDayOff';
 import { useUser } from '../contexts/UserContext';
-import { EyeIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
+import ImportTasksModal from './ImportTasksModal';
 
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -29,7 +30,8 @@ const Calendar: React.FC<CalendarProps> = ({ username }) => {
   const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
   const { currentUser } = useUser();
-  const [showTasks, setShowTasks] = useState<boolean>(true); // Новое состояние для отображения задач
+  const [showTasks, setShowTasks] = useState<boolean>(true); // Состояние для отображения задач
+  const [showImportModal, setShowImportModal] = useState<boolean>(false); // Состояние для модального окна импорта
 
   useEffect(() => {
     fetchHolidays();
@@ -109,8 +111,16 @@ const Calendar: React.FC<CalendarProps> = ({ username }) => {
             Next
           </button>
         </div>
-        {/* Profile, Logout и Иконка Глаза */}
+        {/* Profile, Import, Eye Icon, Logout */}
         <div className="flex items-center space-x-4">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="px-3 py-1 bg-purple-600 rounded hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white flex items-center"
+            aria-label="Import Tasks"
+          >
+            <DocumentArrowDownIcon className="h-5 w-5 mr-1" />
+            Import
+          </button>
           <button
             onClick={toggleShowTasks}
             className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -215,6 +225,13 @@ const Calendar: React.FC<CalendarProps> = ({ username }) => {
           month={monthNames[currentMonth - 1]}
           year={currentYear}
           onClose={handleCloseModal}
+        />
+      )}
+
+      {showImportModal && (
+        <ImportTasksModal
+          username={username}
+          onClose={() => setShowImportModal(false)}
         />
       )}
     </div>

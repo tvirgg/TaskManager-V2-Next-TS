@@ -213,7 +213,18 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const assignCommonTaskToDate = (username: string, date: string, task: string) => {
     addTask(username, date, task);
-    // Не удаляем задачу из common tasks, чтобы её можно было использовать снова
+    // Удаляем задачу из common tasks после добавления на конкретный день
+    setCommonTasks((prevCommonTasks) => {
+      const userCommonTasks = prevCommonTasks[username] || [];
+      const taskIndex = userCommonTasks.indexOf(task);
+      if (taskIndex !== -1) {
+        return {
+          ...prevCommonTasks,
+          [username]: userCommonTasks.filter((_, i) => i !== taskIndex),
+        };
+      }
+      return prevCommonTasks;
+    });
   };
 
   return (
